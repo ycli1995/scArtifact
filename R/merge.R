@@ -336,10 +336,10 @@ setMethod(
 .concat_lists_helper <- function(lists, merge.by) {
   merge.by <- .check_merge_by(merge.by)
   new.list <- list()
-  all.nms <- lapply(lists, names)
   if (length(merge.by) == 0) {
     return(new.list)
   }
+  all.nms <- lapply(lists, names)
   if (merge.by == "same") {
     # Keep elements that are the same in each of the lists.
     use.nms <- Reduce(f = intersect, x = all.nms)
@@ -354,7 +354,9 @@ setMethod(
   }
   if (merge.by == "unique") {
     # Keep elements for which there is only one possible value.
-    use.nms <- unique(x = unlist(x = all.nms))
+    use.nms <- all.nms %>%
+      unlist() %>%
+      unique()
     for (i in use.nms) {
       tmp <- lapply(
         X = lists,
@@ -403,87 +405,78 @@ setMethod(
 #' @importFrom easy.utils fastIntersect
 .concatDFs_helper <- function(df.list, new.df, merge.by) {
   merge.by <- .check_merge_by(merge.by = merge.by)
-  use.rows <- rownames(x = new.df)
-  all.cols <- lapply(X = df.list, FUN = names)
-  if (is.null(x = merge.by)) {
+  use.rows <- rownames(new.df)
+  all.cols <- lapply(df.list, colnames)
+  if (is.null(merge.by)) {
     return(new.df)
   }
   if (merge.by == "same") {
     # Keep columns that are the same in each of the objects.
-    use.cols <- Reduce(f = intersect, x = all.cols)
+    use.cols <- Reduce(intersect, all.cols)
     for (j in use.cols) {
-      tmp <- lapply(
-        X = df.list,
-        FUN = function(df) {
-          i <- fastIntersect(x = use.rows, y = rownames(x = df))
-          df[i, j, drop = FALSE]
-        }
-      )
-      check.same <- .check_same(list = tmp)
+      tmp <- lapply(df.list, function(df) {
+        i <- fastIntersect(use.rows, rownames(df))
+        df[i, j, drop = FALSE]
+      })
+      check.same <- .check_same(tmp)
       if (all(check.same)) {
-        new.df[rownames(x = tmp[[1]]), j] <- tmp[[1]]
+        new.df[rownames(tmp[[1]]), j] <- tmp[[1]]
       }
     }
     return(new.df)
   }
+  use.cols <- all.cols %>%
+    unlist() %>%
+    unique()
   if (merge.by == "unique") {
     # Keep columns for which there is only one possible value.
-    use.cols <- unique(x = unlist(x = all.cols))
+    use.cols <- all.cols %>%
+      unlist() %>%
+      unique()
     for (j in use.cols) {
-      tmp <- lapply(
-        X = df.list,
-        FUN = function(df) {
-          i <- fastIntersect(x = use.rows, y = rownames(x = df))
-          tryCatch(
-            expr = df[i, j, drop = FALSE],
-            error = function(e) return(NULL)
-          )
-        }
-      )
+      tmp <- lapply(df.list, function(df) {
+        i <- fastIntersect(use.rows, rownames(df))
+        tryCatch(
+          expr = df[i, j, drop = FALSE],
+          error = function(e) return(NULL)
+        )
+      })
       check.null <- .check_null(list = tmp)
       tmp <- tmp[!check.null]
       check.same <- .check_same(list = tmp)
       if (all(check.same)) {
         new.df[, j] <- NA
-        new.df[rownames(x = tmp[[1]]), j] <- tmp[[1]][, j]
+        new.df[rownames(tmp[[1]]), j] <- tmp[[1]][, j]
       }
     }
     return(new.df)
   }
   if (merge.by == "first") {
     # The first column seen at each from each position.
-    use.cols <- unique(x = unlist(x = all.cols))
-    if (length(x = use.cols) == 0) {
+    if (length(use.cols) == 0) {
       return(new.df)
     }
     new.df[, use.cols] <- NA
-    remain.cols <- use.cols
-    for (i in seq_len(length.out = length(x = df.list))) {
-      tmp.rows <- fastIntersect(
-        x = use.rows,
-        y = rownames(x = df.list[[i]])
-      )
-      tmp.cols <- intersect(x = remain.cols, y = colnames(x = df.list[[i]]))
+    for (i in rev(seq_along(df.list))) {
+      tmp.rows <- fastIntersect(use.rows, rownames(df.list[[i]]))
+      tmp.cols <- intersect(use.cols, colnames(df.list[[i]]))
       new.df[tmp.rows, tmp.cols] <- df.list[[i]][tmp.rows, tmp.cols]
-      remain.cols <- setdiff(x = remain.cols, y = tmp.cols)
     }
     return(new.df)
   }
   if (merge.by == "only") {
     # Columns that show up in only one of the objects.
-    all.cols <- unlist(x = all.cols)
-    use.cols <- names(x = which(x = table(all.cols) == 1))
-    if (length(x = use.cols) == 0) {
+    all.cols <- unlist(all.cols)
+    use.cols <- which(table(all.cols) == 1) %>%
+      names()
+    if (length(use.cols) == 0) {
       return(new.df)
     }
     new.df[, use.cols] <- NA
-    for (i in seq_len(length.out = length(x = df.list))) {
-      if (any(use.cols %in% colnames(x = df.list[[i]]))) {
-        tmp.rows <- fastIntersect(
-          x = use.rows,
-          y = rownames(x = df.list[[i]])
-        )
-        tmp.cols <- intersect(x = use.cols, y = colnames(x = df.list[[i]]))
+    for (i in seq_along(df.list)) {
+      if (any(use.cols %in% colnames(df.list[[i]]))) {
+        tmp.rows <- fastIntersect(use.rows, rownames(df.list[[i]]))
+        tmp.cols <- intersect(use.cols, colnames(df.list[[i]]))
         new.df[tmp.rows, tmp.cols] <- df.list[[i]][tmp.rows, tmp.cols]
       }
     }
@@ -499,49 +492,48 @@ setMethod(
     r.join = c("inner", "outer"),
     merge.by = NULL
 ) {
-  r.join <- match.arg(arg = r.join)
-  all.rows <- lapply(X = df.list, FUN = rownames)
-  all.cols <- lapply(X = df.list, FUN = colnames)
+  r.join <- match.arg(r.join)
+  all.rows <- lapply(df.list, rownames)
+  all.cols <- lapply(df.list, colnames)
   if (r.join == "inner") {
-    use.rows <- Reduce(f = fastIntersect, x = all.rows)
+    use.rows <- Reduce(fastIntersect, all.rows)
     new.df <- df.list[[1]][use.rows, character(), drop = FALSE]
   } else if (r.join == "outer") {
-    use.rows <- unique(x = unlist(x = all.rows))
-    df.list2 <- lapply(
-      X = df.list,
-      FUN = function(df) df[, character(), drop = FALSE]
-    )
-    new.df <- do.call(what = rbind, args = df.list2)
-    new.df <- new.df[!duplicated(x = unlist(x = all.rows)), , drop = FALSE]
-    rownames(x = new.df) <- use.rows
+    all.rows <- all.rows %>%
+      unlist()
+    new.df <- lapply(df.list, function(df) df[, character(), drop = FALSE]) %>%
+      Reduce(f = rbind)
+    new.df <- new.df[!duplicated(all.rows), , drop = FALSE]
+    rownames(new.df) <- unique(all.rows)
   }
-  new.df <- .concatDFs_helper(
+  .concatDFs_helper(
     df.list = df.list,
     new.df = new.df,
     merge.by = merge.by
   )
-  return(new.df)
 }
 
 #' @importFrom easy.utils fastIntersect
 .rbind_DFs <- function(df.list, join = c("inner", "outer")) {
-  join <- match.arg(arg = join)
+  join <- match.arg(join)
   all.cols <- lapply(X = df.list, FUN = colnames)
   if (join == "inner") {
     use.cols <- Reduce(f = fastIntersect, x = all.cols)
-    for (i in seq_len(length.out = length(x = df.list))) {
+    for (i in seq_along(df.list)) {
       df.list[[i]] <- df.list[[i]][, use.cols, drop = FALSE]
     }
-    new.df <- do.call(what = rbind, args = df.list)
+    new.df <- Reduce(rbind, df.list)
     return(new.df)
   }
-  use.cols <- unique(x = unlist(x = all.cols))
-  for (i in seq_len(length.out = length(x = df.list))) {
-    na.cols <- setdiff(x = use.cols, y = colnames(x = df.list[[i]]))
-    if (length(x = na.cols) > 0) {
+  use.cols <- all.cols %>%
+    unlist() %>%
+    unique()
+  for (i in seq_along(df.list)) {
+    na.cols <- setdiff(use.cols, colnames(df.list[[i]]))
+    if (length(na.cols) > 0) {
       df.list[[i]][, na.cols] <- NA
     }
   }
-  new.df <- do.call(what = rbind, args = df.list)
+  new.df <- Reduce(rbind, df.list)
   return(new.df)
 }

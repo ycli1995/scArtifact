@@ -80,6 +80,7 @@
     altExps.assays = NULL,
     verbose = TRUE
 ) {
+  verboseMsg("-----> Merging altExp...")
   altExps <- .search_common_names(
     SCEs = SCEs,
     func = altExpNames,
@@ -88,7 +89,7 @@
   )
   new.altExps <- list()
   for (i in altExps) {
-    verboseMsg("Merging altExp: ", i)
+    verboseMsg("Merging '", i, "'")
     old.altExps <- list()
     for (j in seq_along(SCEs)) {
       old.altExps[[j]] <- altExp(SCEs[[j]], e = i, withDimnames = TRUE)
@@ -112,6 +113,7 @@
 
 #' @importFrom SingleCellExperiment reducedDim reducedDimNames
 .merge_sce_reducedDims <- function(SCEs, reducedDims = NULL, verbose = TRUE) {
+  verboseMsg("-----> Merging reducedDims...")
   reducs <- .search_common_names(
     SCEs = SCEs,
     func = reducedDimNames,
@@ -120,7 +122,7 @@
   )
   new.reducs <- list()
   for (i in reducs) {
-    verboseMsg("Merging reducedDim: ", i)
+    verboseMsg("Merging '", i, "'")
     old.reducs <- list()
     for (j in seq_along(SCEs)) {
       old.reducs[[j]] <- reducedDim(
@@ -155,6 +157,7 @@
 
 #' @importFrom SummarizedExperiment assay assayNames
 .merge_sce_assays <- function(SCEs, assays = NULL, verbose = TRUE) {
+  verboseMsg("-----> Merging assay...")
   assays <- .search_common_names(
     SCEs = SCEs,
     func = assayNames,
@@ -163,7 +166,7 @@
   )
   new.assays <- list()
   for (i in assays) {
-    verboseMsg("Merging assay: ", i)
+    verboseMsg("Merging '", i, "'")
     old.assays <- list()
     for (j in seq_along(SCEs)) {
       old.assays[[j]] <- assay(SCEs[[j]], i = i, withDimnames = TRUE)
@@ -184,10 +187,10 @@
     idx.collapse = "_",
     verbose = TRUE
 ) {
-  verboseMsg("Preparing SCEs to be merged:")
+  verboseMsg("-----> Preparing SingleCellExperiment(s) to be merged...")
   if (!is.null(add.idx)) {
     stopifnot(length(add.idx) == length(SCEs))
-    verboseMsg("  Adding idx prefixes: ", paste(add.idx, collapse = ", "))
+    verboseMsg("Adding idx prefixes: ", paste(add.idx, collapse = ", "))
     for (i in seq_along(SCEs)) {
       colnames(SCEs[[i]]) <- paste0(
         add.idx[i],
@@ -202,7 +205,7 @@
       names(SCEs) <- as.character(seq_along(SCEs))
     }
     verboseMsg(
-      "  Adding column '", label, "' to specify batch info: ",
+      "Adding column '", label, "' to specify batch info: ",
       paste(names(SCEs), collapse = ", ")
     )
     for (i in names(SCEs)) {
@@ -235,12 +238,12 @@
     verbose = verbose
   )
   # colData and rowData
-  verboseMsg("Merging rowData...")
+  verboseMsg("-----> Merging rowData...")
   rdata <- SCEs %>%
     lapply(FUN = rowData) %>%
-    .concat_DFs(r.join = "outer")
+    .concat_DFs(r.join = "outer", merge.by = "first")
 
-  verboseMsg("Merging colData...")
+  verboseMsg("-----> Merging colData...")
   cdata <- SCEs %>%
     lapply(FUN = colData) %>%
     .rbind_DFs(join = "outer")

@@ -40,12 +40,12 @@ openFragments.character <- function(x, group = NULL, ...) {
   if (!is.tsv) {
     stop("'x' must be an H5 file, a directory or an indexed .tsv")
   }
-  hash <- md5sum(files = path) %>%
+  myhash <- md5sum(files = path) %>%
     paste(collapse = "_")
-  if (hash %in% .BPCells.envs$frags_filemap$hash) {
+  if (myhash %in% .BPCells.envs$frags_filemap$hash) {
     # The query .tsv file has been cached into a directory, just open it.
     file.map <- .BPCells.envs$frags_filemap %>%
-      filter(hash == hash) %>%
+      filter(hash == myhash) %>%
       select(bpcells_dir)
     return(open_fragments_dir(dir = file.map$bpcells_dir, ...))
   }
@@ -59,7 +59,7 @@ openFragments.character <- function(x, group = NULL, ...) {
   .BPCells.envs$frags_filemap <- .BPCells.envs$frags_filemap %>%
     add_row(
       tsv = path,
-      hash = hash,
+      hash = myhash,
       bpcells_dir = file_path_as_absolute(x = tmp.file)
     )
   return(frags)

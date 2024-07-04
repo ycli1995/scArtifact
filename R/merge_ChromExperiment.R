@@ -32,7 +32,7 @@
   mat.rename <- mat[map.rename$mat.idx, , drop = FALSE]
   rownames(mat.rename) <- map.rename$new.rownames
 
-  verboseMsg("Merging overlapped peak counts")
+  verboseMsg("Merging overlapped peak data")
   map.to.megre <- map.df %>%
     filter(n.merge.rows > 1)
   mat.to.merge <- mat[map.to.megre$mat.idx, ]
@@ -277,7 +277,7 @@
 
 .merge_seqinfo <- function(SCEs, verbose = TRUE) {
   # check genomes are all the same
-  verboseMsg("Check genomes...")
+  verboseMsg("-----> Check genomes...")
   genomes <- SCEs %>%
     lapply(FUN = function(x) unique(x = genome(x = x))) %>%
     unlist() %>%
@@ -287,7 +287,7 @@
   }
 
   # merge seqinfo
-  verboseMsg("Merging seqinfo...")
+  verboseMsg("-----> Merging seqinfo...")
   all.seqinfo <- lapply(X = SCEs, FUN = seqinfo)
   seqinfo.present <- !sapply(X = all.seqinfo, FUN = is.null)
   if (!any(seqinfo.present)) {
@@ -308,7 +308,7 @@
 }
 
 .merge_annotations <- function(SCEs, verbose = TRUE) {
-  verboseMsg("Merging annotations...")
+  verboseMsg("-----> Merging annotations...")
   all.annot <- lapply(X = SCEs, FUN = annotations)
   annot.present <- !sapply(X = all.annot, FUN = is.null)
   if (!any(annot.present)) {
@@ -356,13 +356,12 @@
     idx.collapse = idx.collapse,
     verbose = verbose
   )
-  verboseMsg("Merging colData...")
+  verboseMsg("-----> Merging colData...")
   cdata <- SCEs %>%
     lapply(FUN = colData) %>%
     .rbind_DFs(join = "outer")
 
-
-  verboseMsg("Check overlapped rowRanges")
+  verboseMsg("-----> Check overlapped rowRanges...")
   # check that all features are equal
   n.all.features <- SCEs %>%
     lapply(FUN = rownames) %>%
@@ -380,7 +379,7 @@
       all(all.nonoverlap)
   }
 
-  verboseMsg("Get reduced rowRanges")
+  verboseMsg("-----> Get reduced rowRanges...")
   # Found overlaped ranges
   # First create a merged set of granges, preserving the assay of origin
   if (all.identical) {
@@ -406,9 +405,10 @@
     names = assays,
     verbose = verbose
   )
+  verboseMsg("-----> Merging peak assay...")
   new.assays <- list()
   for (i in assays) {
-    verboseMsg("Merging peak assay: ", i)
+    verboseMsg("Merging '", i, "'")
     mats <- list()
     for (j in seq_along(SCEs)) {
       mats[[j]] <- assay(SCEs[[j]], i = i, withDimnames = TRUE)
@@ -436,7 +436,7 @@
     verbose = verbose
   )
 
-  verboseMsg("Merging fragments...")
+  verboseMsg("-----> Merging fragments...")
   new.fragments <- SCEs %>%
     lapply(FUN = fragments) %>%
     Reduce(f = c)

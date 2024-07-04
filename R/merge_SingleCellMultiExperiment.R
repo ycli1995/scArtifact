@@ -43,10 +43,10 @@
     idx.collapse = "_",
     verbose = TRUE
 ) {
-  verboseMsg("Preparing SCMEs to be merged:")
+  verboseMsg(">>>>>> Preparing SingleCellMultiExperiment(s) to be merged:")
   if (length(add.idx) > 0) {
     stopifnot(length(add.idx) == length(SCMEs))
-    verboseMsg("  Adding idx prefixes: ", paste(add.idx, collapse = ", "))
+    verboseMsg("Adding idx prefixes: ", paste(add.idx, collapse = ", "))
     for (i in seq_along(SCMEs)) {
       new.names1 <- paste0(
         add.idx[i],
@@ -67,7 +67,7 @@
         as.character()
     }
     verboseMsg(
-      "  Adding column '", label, "' to specify batch info: ",
+      "Adding column '", label, "' to specify batch info: ",
       paste(names(x = SCMEs), collapse = ", ")
     )
     for (i in names(SCMEs)) {
@@ -78,7 +78,7 @@
 }
 
 #' @importFrom S4Vectors merge
-#' @importFrom SummarizedExperiment assayNames assays assays<- colData rowData
+#' @importFrom SummarizedExperiment assayNames assays assays<- colData
 #' @importFrom SingleCellExperiment reducedDimNames reducedDims
 #' @importFrom MultiAssayExperiment listToMap mapToList
 .merge_SCMEs <- function(
@@ -103,7 +103,7 @@
     verbose = verbose
   )
   # colData
-  verboseMsg("Merging colData...")
+  verboseMsg(">>>>>> Merging colData...")
   cdata <- SCMEs %>%
     lapply(FUN = colData) %>%
     .rbind_DFs(join = "outer")
@@ -122,7 +122,7 @@
   new.exps <- list()
   new.smap <- list()
   for (e in e.use) {
-    verboseMsg("Merging experiment: ", e)
+    verboseMsg(">>>>>> Merging experiment: ", e)
     tmp.list <- lapply(X = SCMEs, FUN = experiment, e = e)
     if (length(x = tmp.list) == 1) {
       new.exps[[e]] <- tmp.list[[1]]
