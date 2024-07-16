@@ -520,7 +520,8 @@ setMethod(
   definition = function(x, i, j, k, ..., drop = FALSE) {
     sce <- int_SCE(x)
     default.exp <- defaultExp(x)
-    x <- callNextMethod()
+    x <- as(x, "MultiAssayExperiment")
+    x <- callGeneric()
     default.exp <- .drop_defaultExp(exps = x, default.exp = default.exp)
     return(.mae_to_scme(mae = x, int_SCE = sce, defaultExp = default.exp))
   }
@@ -538,7 +539,7 @@ setMethod(
     default.exp <- defaultExp(x)
     x <- callNextMethod()
     warning(
-      "Directly modifying experiments in ", class(x = x), " by '[[<-' ",
+      "Directly modifying experiments in ", class(x), " by '[[<-' ",
       "will clean the internal SingleCellExperiment.",
       immediate. = TRUE, call. = FALSE
     )
@@ -557,12 +558,13 @@ setMethod(
   signature = "SingleCellMultiExperiment",
   definition = function(x, i, j, ..., value) {
     default.exp <- defaultExp(x)
-    x <- callNextMethod()
     warning(
       "Directly modifying ", class(x), " by '[<-' ",
       "will clean the internal SingleCellExperiment.",
       immediate. = TRUE, call. = FALSE
     )
+    x <- as(x, "MultiAssayExperiment")
+    x <- callGeneric()
     cdata <- DataFrame(row.names = rownames(colData(x)))
     sce <- SingleCellExperiment(colData = cdata)
     default.exp <- .drop_defaultExp(exps = x, default.exp = default.exp)
@@ -741,3 +743,8 @@ setValidity2(Class = "SingleCellMultiExperiment", method = .valid_scme)
   )
   return(default.exp2)
 }
+
+.subsetSingleCellMultiExperiment <- getFromNamespace(
+  x = ".subsetMultiAssayExperiment",
+  ns = "MultiAssayExperiment"
+)

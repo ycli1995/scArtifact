@@ -92,6 +92,26 @@ prepObj.SingleCellMultiExperiment <- function(object, ...) {
 # Internal #####################################################################
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+## Dense BPCells ###############################################################
+
+remove_dense_bpcells <- function(rlist) {
+  to.remove <- logical(length(rlist))
+  for (i in seq_along(rlist)) {
+    if (inherits(rlist[[i]], "IterableMatrix")) {
+      to.remove[i] <- !is_sparse(rlist[[i]])
+      if (to.remove[i]) {
+        warning(
+          "Skip writing [[", i, "]] element: ",
+          "The ", class(rlist[[i]])[1], " is dense, which is not supported ",
+          "for BPCells::write_matrix_dir() currently.",
+          immediate. = TRUE, call. = FALSE
+        )
+      }
+    }
+  }
+  rlist[!to.remove]
+}
+
 ## Bioconductor S4 classes #####################################################
 
 #' @importFrom SummarizedExperiment assays colData rowData rowRanges
@@ -99,6 +119,7 @@ prepObj.SingleCellMultiExperiment <- function(object, ...) {
 #' @importClassesFrom GenomicRanges GRanges
 .prepObj_RSE <- function(object, ...) {
   all.assays <- assays(object)
+  all.assays <- remove_dense_bpcells(all.assays)
   for (i in seq_along(all.assays)) {
     if (inherits(all.assays[[i]], "dgCMatrix")) {
       all.assays[[i]] <- as(all.assays[[i]], "IterableMatrix")

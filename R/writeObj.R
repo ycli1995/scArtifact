@@ -126,6 +126,34 @@ writeObj.dgCMatrix <- function(
   return(reloadObj(object, path = path, verbose = verbose, to.mem = to.mem))
 }
 
+#' @rdname Obj-IO
+#' @export
+#' @method writeObj IterableMatrix
+writeObj.IterableMatrix <- function(
+    object,
+    path,
+    overwrite = FALSE,
+    verbose = TRUE,
+    to.mem = FALSE,
+    ...
+) {
+  if (!is_sparse(object)) {
+    warning(
+      "The ", class(object)[1], " is dense, which is not supported for ",
+      "BPCells::write_matrix_dir() currently. Skip writeObj.",
+      immediate. = TRUE, call. = FALSE
+    )
+    return(object)
+  }
+  writeObj.default(
+    object = object,
+    path = path,
+    overwrite = overwrite,
+    verbose = verbose,
+    ...
+  )
+}
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Internal #####################################################################
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

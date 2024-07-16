@@ -54,6 +54,7 @@
 \alias{writeObj.SimpleList}
 \alias{writeObj.matrix}
 \alias{writeObj.dgCMatrix}
+\alias{writeObj.IterableMatrix}
 \title{IO for different data structures}
 \usage{
 writeObj(object, ...)
@@ -225,6 +226,8 @@ readObj(path, verbose = TRUE, ...)
 \method{writeObj}{matrix}(object, path, overwrite = FALSE, verbose = TRUE, to.mem = FALSE, ...)
 
 \method{writeObj}{dgCMatrix}(object, path, overwrite = FALSE, verbose = TRUE, to.mem = FALSE, ...)
+
+\method{writeObj}{IterableMatrix}(object, path, overwrite = FALSE, verbose = TRUE, to.mem = FALSE, ...)
 }
 \arguments{
 \item{object}{An SCE-like object.}

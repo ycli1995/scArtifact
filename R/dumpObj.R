@@ -278,7 +278,7 @@ dumpObj.LinearEmbeddingMatrix <- function(
     class = "LinearEmbeddingMatrix",
     ...
 ) {
-  if (any(dim(lem) == 0)) {
+  if (any(dim(object) == 0)) {
     warning("Skip writing an empty ", class(object)[1], immediate. = TRUE)
     return(invisible(NULL))
   }
@@ -293,13 +293,14 @@ dumpObj.LinearEmbeddingMatrix <- function(
         filepath = filepath,
         name = "matrix",
         with.dimnames = FALSE,
-        verbose = verbose
+        level = 0L,
+        verbose = FALSE
       )
     }
   }
   for (i in c("samples", "features", "factors")) {
     if (length(out[[i]]) > 0) {
-      filepath <- file.path(tmp.path, i)
+      filepath <- file.path(path, i)
       verboseMsg(class, ": Writing '", i, "' to ", filepath)
       write(out[[i]], filepath)
     }
@@ -424,53 +425,53 @@ dumpObj.SingleCellMultiExperiment <- function(
   )
 }
 
-dumpObj.Assay5 <- function(
-    object,
-    path,
-    verbose = TRUE,
-    class = "Assay5",
-    ...
-) {
-  .Seurat_dumpObj(
-    object = object,
-    path = path,
-    class = class,
-    verbose = verbose,
-    ...
-  )
-}
-
-dumpObj.DimReduc <- function(
-    object,
-    path,
-    verbose = TRUE,
-    class = "DimReduc",
-    ...
-) {
-  .Seurat_dumpObj(
-    object = object,
-    path = path,
-    class = class,
-    verbose = verbose,
-    ...
-  )
-}
-
-dumpObj.Seurat <- function(
-    object,
-    path,
-    verbose = TRUE,
-    class = "Assay5",
-    ...
-) {
-  .Seurat_dumpObj(
-    object = object,
-    path = path,
-    class = class,
-    verbose = verbose,
-    ...
-  )
-}
+# dumpObj.Assay5 <- function(
+#     object,
+#     path,
+#     verbose = TRUE,
+#     class = "Assay5",
+#     ...
+# ) {
+#   .Seurat_dumpObj(
+#     object = object,
+#     path = path,
+#     class = class,
+#     verbose = verbose,
+#     ...
+#   )
+# }
+#
+# dumpObj.DimReduc <- function(
+#     object,
+#     path,
+#     verbose = TRUE,
+#     class = "DimReduc",
+#     ...
+# ) {
+#   .Seurat_dumpObj(
+#     object = object,
+#     path = path,
+#     class = class,
+#     verbose = verbose,
+#     ...
+#   )
+# }
+#
+# dumpObj.Seurat <- function(
+#     object,
+#     path,
+#     verbose = TRUE,
+#     class = "Assay5",
+#     ...
+# ) {
+#   .Seurat_dumpObj(
+#     object = object,
+#     path = path,
+#     class = class,
+#     verbose = verbose,
+#     ...
+#   )
+# }
 
 ## prepInfo ####################################################################
 

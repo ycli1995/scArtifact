@@ -186,6 +186,33 @@ prepInfo <- function(object, ...) {
 
 ## coerce ######################################################################
 
+#' Coerce between sparse distance matrix and nearest-neighbor object
+#'
+#' @param object For `sparse2NN`, a `dgTMatrix` or `dgCMatrix`. For `nn2Sparse`,
+#' a `list` containing `idx` and `dist` or a `r .doc_links("Neighbor")`.
+#' @param ... `r .dot_param`
+#'
+#' @return
+#' \itemize{
+#' \item `sparse2NN`: An NN `list` containing two matrix: `idx` and `dist`
+#' \item `nn2Sparse`: A `dgCMatrix` or `dgTMatrix`
+#' }
+#'
+#' @name sparse-NN
+NULL
+
+#' @rdname sparse-NN
+#' @export sparse2NN
+sparse2NN <- function(object, ...) {
+  UseMethod(generic = "sparse2NN", object = object)
+}
+
+#' @rdname sparse-NN
+#' @export nn2Sparse
+nn2Sparse <- function(object, ...) {
+  UseMethod(generic = "nn2Sparse", object = object)
+}
+
 #' Read and write the OBJECT.json file
 #'
 #' The `OBJECT.json` file provides the metadata of the object that is

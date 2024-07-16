@@ -82,6 +82,14 @@ reloadObj.DelayedArray <- function(object, path, verbose = TRUE, ...) {
 #' @export
 #' @method reloadObj IterableMatrix
 reloadObj.IterableMatrix <- function(object, path, verbose = TRUE, ...) {
+  if (!is_sparse(object)) {
+    warning(
+      "The ", class(object)[1], " is dense, which is not supported ",
+      "for BPCells::write_matrix_dir() currently. Directly return itself.",
+      immediate. = TRUE, call. = FALSE
+    )
+    return(object)
+  }
   verboseMsg("Reload MatrixDir from ", path)
   extra <- readObjFile(path)
   open_matrix_dir(dir = file.path(path, extra$dir_name), ...)
@@ -126,11 +134,17 @@ reloadObj.RangedSummarizedExperiment <- function(
     ...
 ) {
   verboseMsg("Reload ", class(object)[1], " from ", path)
-  assays(object) <- reloadObj(
+  dimns <- dimnames(object)
+  new.assays <- reloadObj(
     assays(object),
     path = file.path(path, "assays"),
     verbose = verbose
   )
+  for (i in seq_along(new.assays)) {
+    new.assays[[i]] <- .check_set_rownames(new.assays[[i]], rownames(object))
+    new.assays[[i]] <- .check_set_colnames(new.assays[[i]], colnames(object))
+  }
+  assays(object, withDimnames = FALSE) <- new.assays
   return(object)
 }
 

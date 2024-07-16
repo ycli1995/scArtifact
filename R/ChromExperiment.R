@@ -543,8 +543,10 @@ setMethod(
   definition = function(object) {
     .old_show_sce(object)
     cat("fragments: \n")
-    if (!is.null(x = fragments(object))) {
-      frag_paths <- getPath(object = fragments(object))
+    if (!is.null(fragments(object))) {
+      frag_paths <- getPath(fragments(object))
+      cat(" cells(", length(cellNames(fragments(object))), "): ", sep = "")
+      cat(paste(head(cellNames(fragments(object))), collapse = ", "), " ...\n")
       for (i in seq_len(nrow(frag_paths))) {
         cat(" path:", frag_paths[i, 1], "\n")
         if (!is.na(x = frag_paths[i, 3])) {

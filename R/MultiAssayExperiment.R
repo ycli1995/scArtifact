@@ -37,6 +37,8 @@ getWithPrimaries <- function(x, i) {
 # S4 methods ###################################################################
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+## experiment ##################################################################
+
 #' Accessing single experiment data in MultiAssayExperiment
 #'
 #' Supplemental methods for accessing single experiment from
@@ -88,14 +90,14 @@ setMethod(
     # MultiAssayExperiment::getWithColData will automatically set colnames to
     # primaries.
     return(tryCatch(
-      expr = getWithColData(x = x, i = e, mode = mode),
+      expr = getWithColData(x, i = e, mode = mode),
       error = function(err) {
         message(
           "MultiAssayExperiment::getWithColData:\n ", err, "\n",
           "Force to set 'withColData = FALSE'"
         )
         if (withPrimaries) {
-          return(getWithPrimaries(x = x, i = e))
+          return(getWithPrimaries(x, i = e))
         }
         return(experiments(x)[[e]])
       }
@@ -156,3 +158,14 @@ setMethod(
     ))
   }
 )
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Internal #####################################################################
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+#' @importFrom fastmatch fmatch
+.matchReorderSub <- function(assayMap, identifiers) {
+  positions <- fmatch(identifiers, assayMap[['primary']])
+  positions <- positions[!is.na(positions)]
+  assayMap[positions, ]
+}

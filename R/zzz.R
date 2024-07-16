@@ -37,6 +37,19 @@
 .BPCells.envs <- new.env(parent = emptyenv())
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# redefine functions in other packages #########################################
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+.redefine_internal <- function() {
+  environment(.matchReorderSub) <- asNamespace("MultiAssayExperiment")
+  assignInNamespace(
+    ".matchReorderSub",
+    .matchReorderSub,
+    ns = "MultiAssayExperiment"
+  )
+}
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Package ######################################################################
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -47,6 +60,7 @@
 #' @importFrom rlang is_false is_true
 #' @importFrom easy.utils fastIntersect verboseMsg
 #' @importMethodsFrom Matrix t
+#' @useDynLib scArtifact
 #' @keywords internal
 "_PACKAGE"
 
@@ -55,6 +69,7 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 .onLoad <- function(libname, pkgname) {
+  .redefine_internal()
   .init_frags_filemap()
   return(invisible(x = NULL))
 }

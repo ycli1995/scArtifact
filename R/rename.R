@@ -222,7 +222,7 @@ setMethod(
 }
 
 .check_set_rownames <- function(x, new.names) {
-  if (identical(new.names, rownames(x))) {
+  if (all.equal(new.names, rownames(x), check.attributes = FALSE)) {
     return(x)
   }
   if (length(new.names) == 0) {
@@ -233,7 +233,7 @@ setMethod(
 }
 
 .check_set_colnames <- function(x, new.names) {
-  if (identical(new.names, colnames(x))) {
+  if (all.equal(new.names, colnames(x), check.attributes = FALSE)) {
     return(x)
   }
   if (length(new.names) == 0) {

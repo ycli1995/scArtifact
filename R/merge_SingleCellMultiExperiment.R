@@ -163,7 +163,7 @@
       Reduce(f = rbind)
   }
   new.smap <- listToMap(listmap = new.smap)
-  cdata <- cdata[rownames(x = cdata) %in% new.smap[['primary']], ]
+  cdata <- cdata[rownames(x = cdata) %in% new.smap[['primary']], , drop = FALSE]
   new.sce <- .merge_SCEs(
     SCEs = lapply(X = SCMEs, FUN = int_SCE),
     reducedDims = global.reducedDims,
