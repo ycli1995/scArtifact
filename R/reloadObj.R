@@ -73,7 +73,7 @@ reloadObj.DelayedArray <- function(object, path, verbose = TRUE, ...) {
   extra <- readObjFile(path)
   HDF5Array(
     filepath = file.path(path, extra$file_name),
-    name = extra$name,
+    name = extra$data_name,
     ...
   )
 }
@@ -106,8 +106,8 @@ reloadObj.IterableFragments <- function(object, path, verbose = TRUE, ...) {
 
 #' @rdname Obj-IO
 #' @export
-#' @method reloadObj dgCMatrix
-reloadObj.dgCMatrix <- function(
+#' @method reloadObj CsparseMatrix
+reloadObj.CsparseMatrix <- function(
     object,
     path,
     verbose = TRUE,
@@ -119,6 +119,25 @@ reloadObj.dgCMatrix <- function(
   }
   old_func <- getS3method(f = "reloadObj", class = "IterableMatrix")
   old_func(object = object, path = path, verbose = verbose, ...)
+}
+
+#' @rdname Obj-IO
+#' @export
+#' @method reloadObj TsparseMatrix
+reloadObj.TsparseMatrix <- function(
+    object,
+    path,
+    verbose = TRUE,
+    to.mem = FALSE,
+    ...
+) {
+  reloadObj.CsparseMatrix(
+    object = object,
+    path = path,
+    verbose = verbose,
+    to.mem = to.mem,
+    ...
+  )
 }
 
 #' @importFrom SummarizedExperiment assays assays<-
@@ -199,7 +218,12 @@ reloadObj.MultiAssayExperiment <- function(object, path, verbose = TRUE, ...) {
 #' @rdname Obj-IO
 #' @export
 #' @method reloadObj SingleCellMultiExperiment
-reloadObj.SingleCellMultiExperiment <- function(object, path, verbose = TRUE, ...) {
+reloadObj.SingleCellMultiExperiment <- function(
+    object,
+    path,
+    verbose = TRUE,
+    ...
+) {
   verboseMsg("Reload ", class(object)[1], " from ", path)
   experiments(object) <- reloadObj(
     experiments(object),
@@ -207,5 +231,48 @@ reloadObj.SingleCellMultiExperiment <- function(object, path, verbose = TRUE, ..
     verbose = verbose
   )
   int_metadata(object)[[.path_key]] <- file_path_as_absolute(path)
+  return(object)
+}
+
+#' @rdname Obj-IO
+#' @export
+#' @method reloadObj Assay5
+reloadObj.Assay5 <- function(
+    object,
+    path,
+    verbose = TRUE,
+    ...
+) {
+  verboseMsg("Reload ", class(object)[1], " from ", path)
+  new.layers <- reloadObj(
+    object@layers,
+    path = file.path(path, "layers"),
+    verbose = verbose
+  )
+  object@layers <- new.layers
+  return(object)
+}
+
+#' @rdname Obj-IO
+#' @export
+#' @method reloadObj Seurat
+reloadObj.Seurat <- function(
+    object,
+    path,
+    verbose = TRUE,
+    ...
+) {
+  verboseMsg("Reload ", class(object)[1], " from ", path)
+  assay.names <- Assays(object)
+  for (i in assay.names) {
+    if (inherits(object@assays[[i]], "StdAssay")) {
+      dir.name <- gsub("\\s|\\/", "_", i)
+      object@assays[[i]] <- reloadObj(
+        object@assays[[i]],
+        path = file.path(path, "assays", dir.name),
+        verbose = verbose
+      )
+    }
+  }
   return(object)
 }

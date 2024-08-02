@@ -92,7 +92,7 @@ writeObj.matrix <- function(
     path,
     overwrite = FALSE,
     verbose = TRUE,
-    to.mem = FALSE,
+    to.mem = TRUE,
     ...
 ) {
   .simple_writeObj(
@@ -107,13 +107,34 @@ writeObj.matrix <- function(
 
 #' @rdname Obj-IO
 #' @export
-#' @method writeObj dgCMatrix
-writeObj.dgCMatrix <- function(
+#' @method writeObj CsparseMatrix
+writeObj.CsparseMatrix <- function(
     object,
     path,
     overwrite = FALSE,
     verbose = TRUE,
-    to.mem = FALSE,
+    to.mem = TRUE,
+    ...
+) {
+  .simple_writeObj(
+    object = object,
+    path = path,
+    overwrite = overwrite,
+    verbose = verbose,
+    ...
+  )
+  return(reloadObj(object, path = path, verbose = verbose, to.mem = to.mem))
+}
+
+#' @rdname Obj-IO
+#' @export
+#' @method writeObj TsparseMatrix
+writeObj.TsparseMatrix <- function(
+    object,
+    path,
+    overwrite = FALSE,
+    verbose = TRUE,
+    to.mem = TRUE,
     ...
 ) {
   .simple_writeObj(
@@ -134,7 +155,6 @@ writeObj.IterableMatrix <- function(
     path,
     overwrite = FALSE,
     verbose = TRUE,
-    to.mem = FALSE,
     ...
 ) {
   if (!is_sparse(object)) {

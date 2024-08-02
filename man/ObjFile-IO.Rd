@@ -14,6 +14,10 @@
 \alias{prepInfo.IterableFragments}
 \alias{prepInfo.GRanges}
 \alias{prepInfo.SingleCellMultiExperiment}
+\alias{prepInfo.StdAssay}
+\alias{prepInfo.Graph}
+\alias{prepInfo.DimReduc}
+\alias{prepInfo.Seurat}
 \title{Read and write the OBJECT.json file}
 \usage{
 prepInfo(object, ...)
@@ -45,6 +49,14 @@ readObjFile(path)
 \method{prepInfo}{GRanges}(object, file.name = "GRanges.gtf", ...)
 
 \method{prepInfo}{SingleCellMultiExperiment}(object, ...)
+
+\method{prepInfo}{StdAssay}(object, ...)
+
+\method{prepInfo}{Graph}(object, ...)
+
+\method{prepInfo}{DimReduc}(object, ...)
+
+\method{prepInfo}{Seurat}(object, ...)
 }
 \arguments{
 \item{object}{An object}

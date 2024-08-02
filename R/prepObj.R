@@ -19,16 +19,15 @@ prepObj.default <- function(object, ...) {
 #' @export
 #' @method prepObj LinearEmbeddingMatrix
 prepObj.LinearEmbeddingMatrix <- function(object, ...) {
-  out <- list(
+  list(
     sampleFactors = sampleFactors(object) %>% as.matrix(),
     featureLoadings = featureLoadings(object) %>% as.matrix(),
     factorData = factorData(object) %>% as.data.frame(),
-    metadata = metadata(object)
+    metadata = metadata(object),
+    samples = rownames(object),
+    features = rownames(featureLoadings(object)),
+    factors = colnames(object)
   )
-  out[['samples']] <- rownames(object)
-  out[['features']] <- rownames(featureLoadings(object))
-  out[['factors']] <- colnames(object)
-  return(out)
 }
 
 #' @importClassesFrom GenomeInfoDb Seqinfo
@@ -86,6 +85,113 @@ prepObj.MultiAssayExperiment <- function(object, ...) {
 prepObj.SingleCellMultiExperiment <- function(object, ...) {
   object <- formatObj(object)
   .prepObj_SCME(object, ...)
+}
+
+#' @importFrom SeuratObject Cells Features LayerData Layers Misc
+#' @importClassesFrom SeuratObject StdAssay
+#'
+#' @rdname Obj-IO
+#' @export
+#' @method prepObj StdAssay
+prepObj.StdAssay <- function(object, ...) {
+  layer.names <- Layers(object)
+  layers <- list()
+  for (i in layer.names) {
+    layers[[i]] <- LayerData(object, layer = i, ...)
+  }
+  layers <- remove_dense_bpcells(layers)
+  return(list(
+    layers = layers,
+    #cells = as.matrix(object@cells),
+    #features = as.matrix(object@features),
+    cells = Cells(object),
+    features = Features(object),
+    meta.data = object[[]],
+    misc = Misc(object)
+  ))
+}
+
+#' @importClassesFrom SeuratObject Graph
+#'
+#' @rdname Obj-IO
+#' @export
+#' @method prepObj Graph
+prepObj.Graph <- function(object, ...) {
+  as(object, "dgCMatrix")
+}
+
+#' @importFrom SeuratObject Cells Embeddings Features Loadings Misc
+#' @importClassesFrom SeuratObject DimReduc
+#'
+#' @rdname Obj-IO
+#' @export
+#' @method prepObj DimReduc
+prepObj.DimReduc <- function(object, ...) {
+  out <- list(
+    embeddings = Embeddings(object),
+    loadings = Loadings(object),
+    cells = Cells(object),
+    features = Features(object),
+    column_names = colnames(object),
+    jackstraw = object@jackstraw,
+    misc = Misc(object)
+  )
+  proj.loadings <- Loadings(object, projected = TRUE)
+  if (!is_empty(proj.loadings)) {
+    out$projected_loadings <- proj.loadings
+  }
+  return(out)
+}
+
+#' @importFrom SeuratObject Cells Distances Index
+#' @importClassesFrom SeuratObject Neighbor
+#'
+#' @rdname Obj-IO
+#' @export
+#' @method prepObj Neighbor
+prepObj.Neighbor <- function(object, ...) {
+  if (length(Cells(object)) == 0) {
+    object@cell.names <- rownames(Index(object))
+  }
+  list(
+    idx = Index(object),
+    dist = Distances(object),
+    cells = Cells(object),
+    alg = list(alg.idx = object@alg.idx, alg.info = object@alg.info)
+  )
+}
+
+#' @importFrom SeuratObject AddMetaData Idents Misc
+#' @importClassesFrom SeuratObject Seurat StdAssay
+#'
+#' @rdname Obj-IO
+#' @export
+#' @method prepObj Seurat
+prepObj.Seurat <- function(object, ...) {
+  object <- AddMetaData(object, Idents(object), col.name = "active.ident")
+  all.assays <- list()
+  assay.names <- Assays(object)
+  for (i in assay.names) {
+    all.assays[[i]] <- object@assays[[i]]
+    if (!inherits(all.assays[[i]], "StdAssay")) {
+      warning(
+        "Assay '", i, "' does not inherit from 'StdAssay' of Seurat v5. ",
+        "Converting into 'Assay5'. ",
+        immediate. = TRUE, call. = FALSE
+      )
+      all.assays[[i]] <- as(all.assays[[i]], "Assay5")
+    }
+  }
+  list(
+    assays = all.assays,
+    meta.data = object[[]],
+    reductions = object@reductions,
+    graphs = object@graphs,
+    neighbors = object@neighbors,
+    misc = Misc(object),
+    commands = object@commands,
+    tools = object@tools
+  )
 }
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -196,34 +302,3 @@ remove_dense_bpcells <- function(rlist) {
   }
   return(out)
 }
-
-## Seurat classes ##############################################################
-
-.prepObj_Assay <- function(object, ...) {
-  out <- list()
-  out$layers <- .SeuratAssay2SCEassays(object)
-  out$metafeatures <- object[[]]
-  out$varfeatures <- VariableFeatures(object)
-  out$misc <- Misc(object)
-  return(out)
-}
-
-.prepObj_ChrAssay <- function(object, ...) {
-  out <- .prepObj_Assay(object)
-  used.slots <- c(
-    "counts",
-    "data",
-    "scale.data",
-    "meta.features",
-    "var.features"
-  )
-  all.slots <- slotNames(object)
-  other.slots <- setdiff(all.slots, used.slots)
-  out$other_slots <- list()
-  for (i in other.slots) {
-    out$other_slots[[i]] <- slot(object, name = i)
-  }
-  return(out)
-}
-
-

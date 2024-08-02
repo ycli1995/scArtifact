@@ -11,23 +11,33 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// rcpp_get_sparse_dist
-Rcpp::List rcpp_get_sparse_dist(Rcpp::IntegerMatrix& knn_index, Rcpp::NumericMatrix& knn_dist, int n_obs, int n_neighbors);
-RcppExport SEXP _scArtifact_rcpp_get_sparse_dist(SEXP knn_indexSEXP, SEXP knn_distSEXP, SEXP n_obsSEXP, SEXP n_neighborsSEXP) {
+// rcpp_knn_to_sparse_weights
+Rcpp::List rcpp_knn_to_sparse_weights(Rcpp::IntegerMatrix& knn_index, Rcpp::NumericMatrix& knn_dist, bool self_loops);
+RcppExport SEXP _scArtifact_rcpp_knn_to_sparse_weights(SEXP knn_indexSEXP, SEXP knn_distSEXP, SEXP self_loopsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::IntegerMatrix& >::type knn_index(knn_indexSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix& >::type knn_dist(knn_distSEXP);
-    Rcpp::traits::input_parameter< int >::type n_obs(n_obsSEXP);
-    Rcpp::traits::input_parameter< int >::type n_neighbors(n_neighborsSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_get_sparse_dist(knn_index, knn_dist, n_obs, n_neighbors));
+    Rcpp::traits::input_parameter< bool >::type self_loops(self_loopsSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_knn_to_sparse_weights(knn_index, knn_dist, self_loops));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_knn_to_sparse_idx
+Rcpp::List rcpp_knn_to_sparse_idx(Rcpp::IntegerMatrix& knn_index, bool self_loops);
+RcppExport SEXP _scArtifact_rcpp_knn_to_sparse_idx(SEXP knn_indexSEXP, SEXP self_loopsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix& >::type knn_index(knn_indexSEXP);
+    Rcpp::traits::input_parameter< bool >::type self_loops(self_loopsSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_knn_to_sparse_idx(knn_index, self_loops));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_scArtifact_rcpp_get_sparse_dist", (DL_FUNC) &_scArtifact_rcpp_get_sparse_dist, 4},
+    {"_scArtifact_rcpp_knn_to_sparse_weights", (DL_FUNC) &_scArtifact_rcpp_knn_to_sparse_weights, 3},
+    {"_scArtifact_rcpp_knn_to_sparse_idx", (DL_FUNC) &_scArtifact_rcpp_knn_to_sparse_idx, 2},
     {NULL, NULL, 0}
 };
 

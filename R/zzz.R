@@ -57,7 +57,7 @@
 #' @importFrom stats setNames
 #' @importFrom utils head
 #' @importFrom tools file_path_as_absolute
-#' @importFrom rlang is_false is_true
+#' @importFrom rlang is_empty is_false is_true
 #' @importFrom easy.utils fastIntersect verboseMsg
 #' @importMethodsFrom Matrix t
 #' @useDynLib scArtifact

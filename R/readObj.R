@@ -13,7 +13,7 @@ readObj <- function(path, verbose = TRUE, ...) {
     "DataFrame" = .readObj_DF(path, verbose = verbose, ...),
     "HDF5Matrix" = HDF5Array(
       filepath = file.path(path, extra$file_name),
-      name = file.path(path, extra$data_name),
+      name = extra$data_name,
       ...
     ),
     "MatrixDir" = open_matrix_dir(
@@ -25,6 +25,17 @@ readObj <- function(path, verbose = TRUE, ...) {
       ...
     ) %>%
       as("dgCMatrix"),
+    "dgTMatrix" = open_matrix_dir(
+      dir = file.path(path, extra$dir_name),
+      ...
+    ) %>%
+      as("dgTMatrix"),
+    "SelfHits" = open_matrix_dir(
+      dir = file.path(path, extra$dir_name),
+      ...
+    ) %>%
+      as("dgTMatrix") %>%
+      as("SelfHits"),
     "GRanges" = import(file.path(path, extra$file_name), ...),
     "Seqinfo" = .readObj_DF(path, verbose = verbose, ...) %>% .df_to_seqinfo(),
     "FragmentsDir" = open_fragments_dir(
@@ -37,6 +48,18 @@ readObj <- function(path, verbose = TRUE, ...) {
     "ChromExperiment" = .readObj_SCCE(path, verbose = verbose, ...),
     "MultiAssayExperiment" = .readObj_MAE(path, verbose = verbose, ...),
     "SingleCellMultiExperiment" = .readObj_SCME(path, verbose = verbose, ...),
+
+    "Assay5" = .readObj_Assay5(path, verbose = verbose, ...),
+    "Seurat" = .readObj_Seurat(path, verbose = verbose, ...),
+    "DimReduc" = .readObj_DimReduc(path, verbose = verbose, ...),
+    "Neighbor" = .readObj_Neighbor(path, verbose = verbose, ...),
+    "Graph" = open_matrix_dir(
+      dir = file.path(path, extra$dir_name),
+      ...
+    ) %>%
+      as("dgCMatrix") %>%
+      new(Class = "Graph", assay.used = extra$assay_used),
+
     stop("Unsupported class '", class, "' for readObj().")
   )
   return(out)
@@ -56,7 +79,7 @@ readObj <- function(path, verbose = TRUE, ...) {
   out <- list()
   for (i in all.dirs) {
     filepath <- file.path(path, i)
-    verboseMsg(class, ": Reading ", i, "' ", filepath)
+    verboseMsg(class, ": Reading '", i, "' ", filepath)
     out[[i]] <- readObj(filepath, verbose = verbose, ...)
   }
   names(out) <- extra$names
@@ -96,7 +119,7 @@ readObj <- function(path, verbose = TRUE, ...) {
   }
   for (i in c("samples", "features", "factors")) {
     name.file <- file.path(path, i)
-    if (file.exists(md.file)) {
+    if (file.exists(name.file)) {
       verboseMsg(class, ": Reading '", i, "': ", name.file)
       out[[i]] <- readLines(name.file)
     }
@@ -121,7 +144,7 @@ readObj <- function(path, verbose = TRUE, ...) {
   LinearEmbeddingMatrix(
     sampleFactors = out$sampleFactors,
     featureLoadings = out$featureLoadings,
-    factorData = out$factorData,
+    factorData = DataFrame(out$factorData),
     metadata = out$metadata
   )
 }
@@ -156,6 +179,159 @@ readObj <- function(path, verbose = TRUE, ...) {
   int_metadata(out)[[.path_key]] <- file_path_as_absolute(path)
   out
 }
+
+.readObj_DimReduc <- function(path, verbose = TRUE, ...) {
+  extra <- readObjFile(path)
+  class <- extra$class
+  out <- list()
+  sf.file <- file.path(path, "embeddings.h5")
+  if (!file.exists(sf.file)) {
+    stop("Cannot read the ", class, ", missing embeddings.h5")
+  }
+  for (i in c("cells", "features", "column_names")) {
+    name.file <- file.path(path, i)
+    if (file.exists(name.file)) {
+      verboseMsg(class, ": Reading '", i, "': ", name.file)
+      out[[i]] <- readLines(name.file)
+    }
+  }
+  verboseMsg(class, ": Reading 'embeddings.h5': ", sf.file)
+  out$embeddings <- HDF5Array(sf.file, name = "matrix") %>%
+    as.matrix()
+  colnames(out$embeddings) <- out$column_names
+  rownames(out$embeddings) <- out$cells
+
+  for (i in c("loadings", "projected_loadings")) {
+    fl.file <- file.path(path, paste0(i, ".h5"))
+    if (file.exists(fl.file)) {
+      verboseMsg(class, ": Reading '", i, "' ", fl.file)
+      out[[i]] <- HDF5Array(fl.file, name = "matrix") %>%
+        as.matrix()
+      colnames(out[[i]]) <- out$column_names
+      rownames(out[[i]]) <- out$features
+    } else {
+      out[[i]] <- matrix(0, 0, 0)
+    }
+  }
+  for (i in c("misc", "jackstraw")) {
+    filepath <- file.path(path, paste0(i, ".rds"))
+    verboseMsg(class, ": Reading '", i, "' ", filepath)
+    out[[i]] <- readRDS(filepath)
+  }
+  CreateDimReducObject(
+    embeddings = out$embeddings,
+    loadings = out$loadings,
+    projected = out$projected_loadings,
+    assay = extra$assay_used,
+    stdev = extra$stdev %||% numeric(0L),
+    key = extra$key,
+    global = extra$global,
+    jackstraw = out$jackstraw,
+    misc = out$misc
+  )
+}
+
+.readObj_Neighbor <- function(path, verbose = TRUE, ...) {
+  extra <- readObjFile(path)
+  class <- extra$class
+  out <- list()
+  name.file <- file.path(path, "cells")
+  verboseMsg(class, ": Reading '", i, "': ", name.file)
+  out[["cells"]] <- readLines(name.file)
+  for (i in c("idx", "dist")) {
+    filepath <- file.path(path, paste0(i, ".h5"))
+    verboseMsg(class, ": Reading '", i, "' ", filepath)
+    out[[i]] <- HDF5Array(filepath, name = "matrix") %>%
+      as.matrix()
+    colnames(out[[i]]) <- out$cells
+  }
+  filepath <- file.path(path, "alg.rds")
+  verboseMsg(class, ": Reading 'alg.idx' and 'alg.info' ", filepath)
+  out[["alg"]] <- readRDS(filepath)
+  new(
+    Class = "Neighbor",
+    nn.idx = out$idx,
+    nn.dist = out$dist,
+    alg.idx = out$alg$alg.idx,
+    alg.info = out$alg$alg.info,
+    cell.names = out$cells
+  )
+}
+
+.readObj_Assay5 <- function(path, verbose = TRUE, ...) {
+  extra <- readObjFile(path)
+  class <- extra$class
+  assay.orig <- extra$assay_orig
+  if (length(assay.orig) == 0) {
+    assay.orig <- character(0)
+  }
+  out <- list()
+
+  for (i in c("layers", "meta.data")) {
+    filepath <- file.path(path, i)
+    verboseMsg(class, ": Reading '", i, "' ", filepath)
+    out[[i]] <- readObj(filepath, verbose = verbose, ...)
+  }
+  for (i in c("cells", "features")) {
+    filepath <- file.path(path, i)
+    verboseMsg(class, ": Reading '", i, "' ", filepath)
+    out[[i]] <- readLines(filepath)
+  }
+  filepath <- file.path(path, .misc_file)
+  verboseMsg(class, ": Reading 'misc' ", filepath)
+  out[['misc']] <- readRDS(filepath)
+  object <- .CreateStdAssay(
+    counts = out$layers,
+    cells = out$cells,
+    features = out$features,
+    type = "Assay5"
+  )
+  object@meta.data <- out$meta.data[Features(object), ]
+  object@misc <- out$misc
+  Key(object) <- extra$key
+  DefaultAssay(object) <- assay.orig
+  DefaultLayer(object) <- extra$default
+  return(object)
+}
+
+.readObj_Seurat <- function(path, verbose = TRUE, ...) {
+  extra <- readObjFile(path)
+  class <- extra$class
+  slot.names <- list.dirs(path, full.names = FALSE, recursive = FALSE)
+  out <- list()
+  for (i in slot.names) {
+    filepath <- file.path(path, i)
+    verboseMsg(class, ": Reading '", i, "' ", filepath)
+    out[[i]] <- readObj(filepath, verbose = verbose)
+  }
+  cells <- rownames(out$meta.data)
+  for (i in c("misc", "tools", "commands")) {
+    filepath <- file.path(path, paste0(i, ".rds"))
+    if (file.exists(filepath)) {
+      out[[i]] <- readRDS(filepath)
+    } else {
+      out[[i]] <- list()
+    }
+  }
+  suppressWarnings(new(
+    Class = "Seurat",
+    assays = out$assays,
+    meta.data = out$meta.data,
+    active.assay = extra$active_assay,
+    active.ident = out$meta.data$active.ident,
+    graphs = out$graphs %||% list(),
+    neighbors = out$neighbors %||% list(),
+    reductions = out$reductions %||% list(),
+    images = out$images %||% list(),
+    project.name = extra$project_name,
+    misc = out$misc,
+    version = package_version(extra$seuratobject_version),
+    commands = out$commands,
+    tools = out$tools
+  ))
+}
+
+
 
 ## read S4 object as list ######################################################
 
@@ -284,13 +460,20 @@ readObj <- function(path, verbose = TRUE, ...) {
   return(assays)
 }
 
-.read_metadata <- function(path, class, verbose = TRUE) {
+.read_metadata <- function(
+    path,
+    class,
+    name = NULL,
+    key = "metadata",
+    verbose = TRUE
+) {
+  name <- name %||% .md_file
   out <- list()
-  md.file <- file.path(path, .md_file)
+  md.file <- file.path(path, name)
   if (!file.exists(md.file)) {
     return(out)
   }
-  verboseMsg(class, ": Reading 'metadata': ", md.file)
+  verboseMsg(class, ": Reading '", key, "': ", md.file)
   return(readRDS(md.file))
 }
 
@@ -391,4 +574,10 @@ readObj <- function(path, verbose = TRUE, ...) {
     metadata = rlist$metadata
   )
 }
+
+
+
+
+
+
 

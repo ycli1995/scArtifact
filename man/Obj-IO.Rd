@@ -15,8 +15,10 @@
 \alias{dumpObj.matrix}
 \alias{dumpObj.DelayedArray}
 \alias{dumpObj.IterableMatrix}
-\alias{dumpObj.dgCMatrix}
+\alias{dumpObj.CsparseMatrix}
+\alias{dumpObj.TsparseMatrix}
 \alias{dumpObj.IterableFragments}
+\alias{dumpObj.SelfHits}
 \alias{dumpObj.Seqinfo}
 \alias{dumpObj.GRanges}
 \alias{dumpObj.LinearEmbeddingMatrix}
@@ -25,6 +27,11 @@
 \alias{dumpObj.ChromExperiment}
 \alias{dumpObj.MultiAssayExperiment}
 \alias{dumpObj.SingleCellMultiExperiment}
+\alias{dumpObj.Assay5}
+\alias{dumpObj.DimReduc}
+\alias{dumpObj.Graph}
+\alias{dumpObj.Neighbor}
+\alias{dumpObj.Seurat}
 \alias{prepObj.default}
 \alias{prepObj.LinearEmbeddingMatrix}
 \alias{prepObj.Seqinfo}
@@ -33,6 +40,11 @@
 \alias{prepObj.ChromExperiment}
 \alias{prepObj.MultiAssayExperiment}
 \alias{prepObj.SingleCellMultiExperiment}
+\alias{prepObj.StdAssay}
+\alias{prepObj.Graph}
+\alias{prepObj.DimReduc}
+\alias{prepObj.Neighbor}
+\alias{prepObj.Seurat}
 \alias{readObj}
 \alias{reloadObj.default}
 \alias{reloadObj.list}
@@ -43,17 +55,21 @@
 \alias{reloadObj.DelayedArray}
 \alias{reloadObj.IterableMatrix}
 \alias{reloadObj.IterableFragments}
-\alias{reloadObj.dgCMatrix}
+\alias{reloadObj.CsparseMatrix}
+\alias{reloadObj.TsparseMatrix}
 \alias{reloadObj.RangedSummarizedExperiment}
 \alias{reloadObj.SingleCellExperiment}
 \alias{reloadObj.ChromExperiment}
 \alias{reloadObj.MultiAssayExperiment}
 \alias{reloadObj.SingleCellMultiExperiment}
+\alias{reloadObj.Assay5}
+\alias{reloadObj.Seurat}
 \alias{writeObj.default}
 \alias{writeObj.list}
 \alias{writeObj.SimpleList}
 \alias{writeObj.matrix}
-\alias{writeObj.dgCMatrix}
+\alias{writeObj.CsparseMatrix}
+\alias{writeObj.TsparseMatrix}
 \alias{writeObj.IterableMatrix}
 \title{IO for different data structures}
 \usage{
@@ -122,12 +138,21 @@ dumpObj(object, ...)
   ...
 )
 
-\method{dumpObj}{dgCMatrix}(
+\method{dumpObj}{CsparseMatrix}(
   object,
   path,
   verbose = TRUE,
   dir.name = "matrix",
   class = "dgCMatrix",
+  ...
+)
+
+\method{dumpObj}{TsparseMatrix}(
+  object,
+  path,
+  verbose = TRUE,
+  dir.name = "matrix",
+  class = "dgTMatrix",
   ...
 )
 
@@ -137,6 +162,15 @@ dumpObj(object, ...)
   verbose = TRUE,
   dir.name = "fragments",
   class = "FragmentsDir",
+  ...
+)
+
+\method{dumpObj}{SelfHits}(
+  object,
+  path,
+  verbose = TRUE,
+  dir.name = "matrix",
+  class = "SelfHits",
   ...
 )
 
@@ -169,6 +203,23 @@ dumpObj(object, ...)
 
 \method{dumpObj}{SingleCellMultiExperiment}(object, path, verbose = TRUE, class = "SingleCellMultiExperiment", ...)
 
+\method{dumpObj}{Assay5}(object, path, verbose = TRUE, class = "Assay5", ...)
+
+\method{dumpObj}{DimReduc}(object, path, verbose = TRUE, class = "DimReduc", ...)
+
+\method{dumpObj}{Graph}(
+  object,
+  path,
+  verbose = TRUE,
+  dir.name = "matrix",
+  class = "Graph",
+  ...
+)
+
+\method{dumpObj}{Neighbor}(object, path, verbose = TRUE, class = "Neighbor", ...)
+
+\method{dumpObj}{Seurat}(object, path, verbose = TRUE, class = "Seurat", ...)
+
 \method{prepObj}{default}(object, ...)
 
 \method{prepObj}{LinearEmbeddingMatrix}(object, ...)
@@ -184,6 +235,16 @@ dumpObj(object, ...)
 \method{prepObj}{MultiAssayExperiment}(object, ...)
 
 \method{prepObj}{SingleCellMultiExperiment}(object, ...)
+
+\method{prepObj}{StdAssay}(object, ...)
+
+\method{prepObj}{Graph}(object, ...)
+
+\method{prepObj}{DimReduc}(object, ...)
+
+\method{prepObj}{Neighbor}(object, ...)
+
+\method{prepObj}{Seurat}(object, ...)
 
 readObj(path, verbose = TRUE, ...)
 
@@ -205,7 +266,9 @@ readObj(path, verbose = TRUE, ...)
 
 \method{reloadObj}{IterableFragments}(object, path, verbose = TRUE, ...)
 
-\method{reloadObj}{dgCMatrix}(object, path, verbose = TRUE, to.mem = FALSE, ...)
+\method{reloadObj}{CsparseMatrix}(object, path, verbose = TRUE, to.mem = FALSE, ...)
+
+\method{reloadObj}{TsparseMatrix}(object, path, verbose = TRUE, to.mem = FALSE, ...)
 
 \method{reloadObj}{RangedSummarizedExperiment}(object, path, verbose = TRUE, ...)
 
@@ -217,17 +280,23 @@ readObj(path, verbose = TRUE, ...)
 
 \method{reloadObj}{SingleCellMultiExperiment}(object, path, verbose = TRUE, ...)
 
+\method{reloadObj}{Assay5}(object, path, verbose = TRUE, ...)
+
+\method{reloadObj}{Seurat}(object, path, verbose = TRUE, ...)
+
 \method{writeObj}{default}(object, path, overwrite = FALSE, verbose = TRUE, ...)
 
 \method{writeObj}{list}(object, path, overwrite = FALSE, verbose = TRUE, ...)
 
 \method{writeObj}{SimpleList}(object, path, overwrite = FALSE, verbose = TRUE, ...)
 
-\method{writeObj}{matrix}(object, path, overwrite = FALSE, verbose = TRUE, to.mem = FALSE, ...)
+\method{writeObj}{matrix}(object, path, overwrite = FALSE, verbose = TRUE, to.mem = TRUE, ...)
 
-\method{writeObj}{dgCMatrix}(object, path, overwrite = FALSE, verbose = TRUE, to.mem = FALSE, ...)
+\method{writeObj}{CsparseMatrix}(object, path, overwrite = FALSE, verbose = TRUE, to.mem = TRUE, ...)
 
-\method{writeObj}{IterableMatrix}(object, path, overwrite = FALSE, verbose = TRUE, to.mem = FALSE, ...)
+\method{writeObj}{TsparseMatrix}(object, path, overwrite = FALSE, verbose = TRUE, to.mem = TRUE, ...)
+
+\method{writeObj}{IterableMatrix}(object, path, overwrite = FALSE, verbose = TRUE, ...)
 }
 \arguments{
 \item{object}{An SCE-like object.}

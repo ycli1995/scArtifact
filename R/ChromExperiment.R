@@ -710,19 +710,7 @@ setAs(
   #   S4Vectors:::disableValidity(disabled = TRUE)
   #   on.exit(S4Vectors:::disableValidity(disabled = old))
   # }
-  ranges <- ranges %||% StringToGRanges(regions = rownames(sce), sep = sep)
-  if (length(ranges) != nrow(sce)) {
-    stop(
-      "Length of 'ranges' does not match number of rows",
-      " in SingleCellExperiment"
-    )
-  }
-  if (!isDisjoint(ranges)) {
-    warning(
-      "Overlapping 'ranges' supplied. Ranges should be non-overlapping.",
-      immediate. = TRUE, call. = FALSE
-    )
-  }
+  ranges <- .chromExp_rowRanges(sce, ranges = ranges, sep = sep)
   row.data <- rowData(sce)
   rowRanges(sce) <- ranges
   rownames(sce) <- rownames(row.data)
@@ -733,4 +721,23 @@ setAs(
   annotations(csce) <- annotations
   genome(csce) <- genome
   return(csce)
+}
+
+#' @importFrom IRanges isDisjoint
+#' @importFrom Signac StringToGRanges
+.chromExp_rowRanges <- function(data, ranges = NULL, sep = c("-", "-")) {
+  ranges <- ranges %||% StringToGRanges(regions = rownames(data), sep = sep)
+  if (length(ranges) != nrow(data)) {
+    stop(
+      "Length of 'ranges' does not match number of rows",
+      " in the input data"
+    )
+  }
+  if (!isDisjoint(ranges)) {
+    warning(
+      "Overlapping 'ranges' supplied. Ranges should be non-overlapping.",
+      immediate. = TRUE, call. = FALSE
+    )
+  }
+  return(ranges)
 }

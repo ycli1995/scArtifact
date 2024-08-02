@@ -35,6 +35,31 @@ setClass(
 )
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Seurat extension classes #####################################################
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# @name ChromatinAssay5-class
+# @rdname ChromatinAssay5-class
+# @importClassesFrom SeuratObject Assay5
+# @importClassesFrom GenomicRanges GRanges
+# @exportClass ChromatinAssay5
+# @concept assay
+# setClass(
+#   Class = "ChromatinAssay5",
+#   contains = "Assay5",
+#   slots = list(
+#     "ranges" = "GRanges",
+#     "motifs" = "ANY",
+#     "fragments" = "list",
+#     "seqinfo" = "ANY",
+#     "annotation" = "ANY",
+#     "bias" = "ANY",
+#     "positionEnrichment" = "list",
+#     "links" = "GRanges"
+#   )
+# )
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Others #######################################################################
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

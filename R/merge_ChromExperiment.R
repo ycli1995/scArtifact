@@ -269,6 +269,9 @@
       verbose = verbose
     )
   }
+  if (length(mats) == 1) {
+    return(mats[[1]][new.rownames, ])
+  }
   return(mergeMatrices(
     x = mats[[1]],
     y = mats[2:length(x = mats)]
